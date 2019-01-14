@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	wserest "github.com/openfresh/wse-rest-library-go"
-	"github.com/openfresh/wse-rest-library-go/entity/application/helper"
+	wserest "github.com/sebastien4/wse-rest-library-go"
+	"github.com/sebastien4/wse-rest-library-go/entity/application/helper"
 )
 
 var UseWowza = getenv("USE_WOWZA", "")

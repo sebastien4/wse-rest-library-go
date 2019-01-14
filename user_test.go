@@ -3,7 +3,7 @@ package wserest
 import (
 	"testing"
 
-	"github.com/openfresh/wse-rest-library-go/entity/application/helper"
+	"github.com/sebastien4/wse-rest-library-go/entity/application/helper"
 )
 
 func TestUser(t *testing.T) {
