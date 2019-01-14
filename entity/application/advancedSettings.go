@@ -1,8 +1,8 @@
 package application
 
 import (
-	"github.com/openfresh/wse-rest-library-go/entity/application/helper"
-	"github.com/openfresh/wse-rest-library-go/entity/base"
+	"github.com/sebastien4/wse-rest-library-go/entity/application/helper"
+	"github.com/sebastien4/wse-rest-library-go/entity/base"
 )
 
 type AdvancedSettings struct {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openfresh/wse-rest-library-go/entity/application/helper"
-	"github.com/openfresh/wse-rest-library-go/entity/base"
+	"github.com/sebastien4/wse-rest-library-go/entity/application/helper"
+	"github.com/sebastien4/wse-rest-library-go/entity/base"
 )
 
 // DvrClipExtraction is DVR stores utility
@@ -81,7 +81,7 @@ func (d *DvrClipExtraction) Convert(name string, startTime *time.Time, endTime *
 		query = "?" + query
 	}
 
-	d.setRestURI(d.baseURI + "/{$name}/actions/convert" + query)
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
@@ -123,7 +123,7 @@ func (d *DvrClipExtraction) ConvertByDurationWithStartTime(name string, startTim
 		query = "?" + query
 	}
 
-	d.setRestURI(d.baseURI + "/{$name}/actions/convert" + query)
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
@@ -151,7 +151,7 @@ func (d *DvrClipExtraction) ConvertByDurationWithEndTime(name string, endTime *t
 		query = "?" + query
 	}
 
-	d.setRestURI(d.baseURI + "/{$name}/actions/convert" + query)
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
