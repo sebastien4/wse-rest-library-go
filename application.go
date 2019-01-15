@@ -81,6 +81,17 @@ func (a *Application) GetAll() (map[string]interface{}, error) {
 	return a.sendRequest(a.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 }
 
+// GetAllSeb retrieves the list of Applications
+func (a *Application) GetAllSeb() (WSEAppRet, error) {
+	a.setParameters()
+
+	a.setRestURI(a.host() + "/servers/" + a.serverInstance() + "/vhosts/" + a.vHostInstance() + "/applications")
+
+	var r WSEAppRet
+	err := a.sendRequestSeb(&r, a.preparePropertiesForRequest(), []base.Entity{}, GET, "")
+	return r, err
+}
+
 // Create adds the specified Application configuration
 func (a *Application) Create(
 	streamConfig *application.StreamConfig,

@@ -50,6 +50,23 @@ type wowza struct {
 	baseURI    string
 }
 
+// WSEAppRet is struct for GetAll() applications
+type WSEAppRet struct {
+	ServerName   string `json:"serverName"`
+	Applications []WSEApp
+}
+
+// WSEApp is struct for GetAll() applications
+type WSEApp struct {
+	ID                   string `json:"id"`
+	AppType              string `json:"appType"`
+	HREF                 string `json:"href"`
+	DRMEnabled           bool   `json:"drmEnabled"`
+	DVREnabled           bool   `json:"dvrEnabled"`
+	StreamTargetsEnabled bool   `json:"streamTargetsEnabled"`
+	TranscoderEnabled    bool   `json:"transcoderEnabled"`
+}
+
 func (w *wowza) init(settings *helper.Settings) {
 	w.settings = settings
 	w.skip = make(map[string]interface{})
@@ -170,6 +187,73 @@ func (w *wowza) sendRequest(props map[string]interface{}, entities []base.Entity
 		return contents, nil
 	}
 	return nil, errors.New("no restURI")
+}
+
+func (w *wowza) sendRequestSeb(itf interface{}, props map[string]interface{}, entities []base.Entity, verbType VerbType, queryParams string) error {
+	if restURI, ok := props["restURI"].(string); ok {
+		for _, entity := range entities {
+			name := entity.EntityName()
+			props[name] = entity
+		}
+		jsonb, err := json.Marshal(props)
+		if err != nil {
+			return err
+		}
+
+		if queryParams != "" {
+			restURI += "?" + queryParams
+		}
+		w.debugf("JSON REQUEST to %s with verb %s: %+v", restURI, verbType, props)
+
+		client := &http.Client{Timeout: 10 * time.Second}
+
+		req, err := http.NewRequest(verbType.String(), restURI, bytes.NewReader(jsonb))
+		req.Header.Add("Accept", "application/json; charset=utf-8")
+		req.Header.Add("Content-type", "application/json; charset=utf-8")
+		req.Header.Add("Content-Length", strconv.Itoa(len(jsonb)))
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if w.settings.IsUseDigest() && resp.StatusCode == http.StatusUnauthorized {
+			resp.Body.Close()
+			var (
+				auth     *authorization
+				wa       *wwwAuthenticate
+				waString string
+			)
+			if waString = resp.Header.Get("WWW-Authenticate"); waString == "" {
+				return fmt.Errorf("failed to get WWW-Authenticate header, please check your server configuration")
+			}
+			wa = newWwwAuthenticate(waString)
+			dr := new(digestRequest)
+			dr.UpdateRequest(w.settings.Username(), w.settings.Password(), verbType.String(), restURI, string(jsonb))
+			dr.CertVal = true
+			dr.Wa = wa
+			if auth, err = newAuthorization(dr); err != nil {
+				return err
+			}
+			req, err = http.NewRequest(verbType.String(), restURI, bytes.NewReader(jsonb))
+			req.Header.Add("Accept", "application/json; charset=utf-8")
+			req.Header.Add("Content-type", "application/json; charset=utf-8")
+			req.Header.Add("Content-Length", strconv.Itoa(len(jsonb)))
+			req.Header.Add("Authorization", auth.toString())
+			resp, err = client.Do(req)
+			if err != nil {
+				return err
+			}
+		}
+		defer resp.Body.Close()
+		json.NewDecoder(resp.Body).Decode(itf)
+
+		w.debugf("RETURN: %+v", itf)
+
+		w.skip = make(map[string]interface{})
+		w.additional = make(map[string]interface{})
+
+		return nil
+	}
+	return errors.New("no restURI")
 }
 
 func (w *wowza) AddAdditionalParameter(key string, value interface{}) {
