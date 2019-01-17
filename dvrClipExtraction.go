@@ -14,6 +14,56 @@ type DvrClipExtraction struct {
 	wowza
 }
 
+// WSEDVRStores is struct for GetAll() DVR stores
+type WSEDVRStores struct {
+	ServerName               string        `json:"serverName"`
+	Version                  string        `json:"version"`
+	DVRConverterStoreSummary []WSEDVRStore `json:"dvrconverterstoresummary"`
+}
+
+// WSEDVRStore is struct for GetAll() DVR stores
+type WSEDVRStore struct {
+	ID       string `json:"name"`
+	Location string `json:"location"`
+}
+
+// WSEDVRConverter is struct for GetAll() DVR stores
+type WSEDVRConverter struct {
+	ID                string               `json:"dvrStoreName"`
+	ServerName        string               `json:"serverName"`
+	Version           string               `json:"version"`
+	DVRConverterStore WSEDVRConverterStore `json:"DvrConverterStore"`
+}
+
+// WSEDVRConverterStore is struct for GetAll() DVR stores
+type WSEDVRConverterStore struct {
+	DVRStoreName        string                 `json:"dvrStoreName"`
+	AudioAvailable      bool                   `json:"audioAvailable"`
+	VideoAvailable      bool                   `json:"videoAvailable"`
+	DVRStartTime        int                    `json:"dvrStartTime"`
+	DVREndTime          int                    `json:"dvrEndTime"`
+	OutputFilename      string                 `json:"outputFilename"`
+	IsLive              bool                   `json:"isLive"`
+	Duration            int                    `json:"duration"`
+	UTCStart            int64                  `json:"utcStart"`
+	UTCEnd              int64                  `json:"utcEnd"`
+	DVRConversionStatus WSEDVRConversionStatus `json:"conversionStatus"`
+}
+
+// WSEDVRConversionStatus is struct for GetAll() DVR stores
+type WSEDVRConversionStatus struct {
+	StoreName    string `json:"storeName"`
+	FileName     string `json:"fileName"`
+	State        string `json:"state"`
+	StatusCode   string `json:"statusCode"`
+	StartTime    int64  `json:"startTime"`
+	EndTime      int64  `json:"endTime"`
+	FileDuration int    `json:"fileDuration"`
+	Duration     int    `json:"duration"`
+	CurrentChunk int    `json:"currentChunk"`
+	ChunkCount   int    `json:"chunkCount"`
+}
+
 // NewDvrClipExtraction creates DvrClipExtraction object
 func NewDvrClipExtraction(settings *helper.Settings, appName string, appInstance string) *DvrClipExtraction {
 	if appInstance == "" {
@@ -38,6 +88,15 @@ func (d *DvrClipExtraction) GetItem(name string) (map[string]interface{}, error)
 	d.setRestURI(d.baseURI + "/" + name)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
+}
+
+// GetItemSeb retrieves the information about a store/converter
+func (d *DvrClipExtraction) GetItemSeb(name string) (WSEDVRConverter, error) {
+	d.setRestURI(d.baseURI + "/" + name)
+
+	var r WSEDVRConverter
+	err := d.sendRequestSeb(&r, d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
+	return r, err
 }
 
 // ConvertGroup convert group
@@ -163,6 +222,17 @@ func (d *DvrClipExtraction) GetAll() (map[string]interface{}, error) {
 	d.setRestURI(d.baseURI)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
+}
+
+// GetAllSeb retrieves the list of Applications
+func (d *DvrClipExtraction) GetAllSeb() (WSEDVRStores, error) {
+	d.setNoParams()
+
+	d.setRestURI(d.baseURI)
+
+	var r WSEDVRStores
+	err := d.sendRequestSeb(&r, d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
+	return r, err
 }
 
 func (d *DvrClipExtraction) setNoParams() {

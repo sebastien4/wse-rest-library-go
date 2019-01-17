@@ -50,23 +50,6 @@ type wowza struct {
 	baseURI    string
 }
 
-// WSEAppRet is struct for GetAll() applications
-type WSEAppRet struct {
-	ServerName   string `json:"serverName"`
-	Applications []WSEApp
-}
-
-// WSEApp is struct for GetAll() applications
-type WSEApp struct {
-	ID                   string `json:"id"`
-	AppType              string `json:"appType"`
-	HREF                 string `json:"href"`
-	DRMEnabled           bool   `json:"drmEnabled"`
-	DVREnabled           bool   `json:"dvrEnabled"`
-	StreamTargetsEnabled bool   `json:"streamTargetsEnabled"`
-	TranscoderEnabled    bool   `json:"transcoderEnabled"`
-}
-
 func (w *wowza) init(settings *helper.Settings) {
 	w.settings = settings
 	w.skip = make(map[string]interface{})
@@ -244,7 +227,10 @@ func (w *wowza) sendRequestSeb(itf interface{}, props map[string]interface{}, en
 			}
 		}
 		defer resp.Body.Close()
-		json.NewDecoder(resp.Body).Decode(itf)
+		err = json.NewDecoder(resp.Body).Decode(itf)
+		if err != nil {
+			return err
+		}
 
 		w.debugf("RETURN: %+v", itf)
 

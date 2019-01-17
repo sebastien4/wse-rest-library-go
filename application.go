@@ -11,6 +11,23 @@ type Application struct {
 	wowza
 }
 
+// WSEApps is struct for GetAll() applications
+type WSEApps struct {
+	ServerName   string   `json:"serverName"`
+	Applications []WSEApp `json:"applications"`
+}
+
+// WSEApp is struct for GetAll() applications
+type WSEApp struct {
+	ID                   string `json:"id"`
+	AppType              string `json:"appType"`
+	HREF                 string `json:"href"`
+	DRMEnabled           bool   `json:"drmEnabled"`
+	DVREnabled           bool   `json:"dvrEnabled"`
+	StreamTargetsEnabled bool   `json:"streamTargetsEnabled"`
+	TranscoderEnabled    bool   `json:"transcoderEnabled"`
+}
+
 // NewApplication create Application object
 func NewApplication(
 	settings *helper.Settings,
@@ -82,12 +99,12 @@ func (a *Application) GetAll() (map[string]interface{}, error) {
 }
 
 // GetAllSeb retrieves the list of Applications
-func (a *Application) GetAllSeb() (WSEAppRet, error) {
+func (a *Application) GetAllSeb() (WSEApps, error) {
 	a.setParameters()
 
 	a.setRestURI(a.host() + "/servers/" + a.serverInstance() + "/vhosts/" + a.vHostInstance() + "/applications")
 
-	var r WSEAppRet
+	var r WSEApps
 	err := a.sendRequestSeb(&r, a.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 	return r, err
 }
