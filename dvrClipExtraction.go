@@ -40,28 +40,30 @@ type WSEDVRConverterStore struct {
 	DVRStoreName        string                 `json:"dvrStoreName"`
 	AudioAvailable      bool                   `json:"audioAvailable"`
 	VideoAvailable      bool                   `json:"videoAvailable"`
-	DVRStartTime        int                    `json:"dvrStartTime"`
-	DVREndTime          int                    `json:"dvrEndTime"`
-	OutputFilename      string                 `json:"outputFilename"`
 	IsLive              bool                   `json:"isLive"`
-	Duration            int                    `json:"duration"`
+	DVRStartTime        int64                  `json:"dvrStartTime"`
+	DVREndTime          int64                  `json:"dvrEndTime"`
+	Duration            int64                  `json:"duration"`
 	UTCStart            int64                  `json:"utcStart"`
 	UTCEnd              int64                  `json:"utcEnd"`
+	OutputFilename      string                 `json:"outputFilename"`
 	DVRConversionStatus WSEDVRConversionStatus `json:"conversionStatus"`
 }
 
 // WSEDVRConversionStatus is struct for GetAll() DVR stores
 type WSEDVRConversionStatus struct {
-	StoreName    string `json:"storeName"`
-	FileName     string `json:"fileName"`
-	State        string `json:"state"`
-	StatusCode   string `json:"statusCode"`
-	StartTime    int64  `json:"startTime"`
-	EndTime      int64  `json:"endTime"`
-	FileDuration int    `json:"fileDuration"`
-	Duration     int    `json:"duration"`
-	CurrentChunk int    `json:"currentChunk"`
-	ChunkCount   int    `json:"chunkCount"`
+	StoreName    string   `json:"storeName"`
+	FileName     string   `json:"fileName"`
+	State        string   `json:"state"` // The possible states are STOPPED, INITIALIZING, RUNNING, SUCCESSFUL, and ERROR.
+	StatusCode   string   `json:"statusCode"`
+	ErrorStrings []string `json:"errorStrings"`
+	StartTime    int64    `json:"startTime"`
+	EndTime      int64    `json:"endTime"`
+	Duration     int64    `json:"duration"`
+	CurrentChunk int64    `json:"currentChunk"`
+	ChunkCount   int64    `json:"chunkCount"`
+	FileSize     int64    `json:"fileSize"`
+	FileDuration int64    `json:"fileDuration"`
 }
 
 // NewDvrClipExtraction creates DvrClipExtraction object
@@ -69,9 +71,11 @@ func NewDvrClipExtraction(settings *helper.Settings, appName string, appInstance
 	if appInstance == "" {
 		appInstance = "_definst_"
 	}
+
 	d := new(DvrClipExtraction)
 	d.init(settings)
 	d.baseURI = d.host() + "/servers/" + d.serverInstance() + "/vhosts/" + d.vHostInstance() + "/applications/" + appName + "/instances/" + appInstance + "/dvrstores"
+
 	return d
 }
 
@@ -108,16 +112,6 @@ func (d *DvrClipExtraction) ConvertGroup(nameArr []string) (map[string]interface
 }
 
 // Convert converts
-/*
- * /// query params
- * dvrConverterStartTime=[unix timestamp]
- * dvrConverterEndTime=[unix-timestamp]
- * dvrConverterOutputFilename=[outputfilename]
- *
- * @param $startTime is a unix timestamp
- * @param $endTime is a unix timestamp
- * @param $outputFileName is a string
- */
 func (d *DvrClipExtraction) Convert(name string, startTime *time.Time, endTime *time.Time, outputFileName string) (map[string]interface{}, error) {
 	d.setNoParams()
 	query := ""
@@ -136,6 +130,43 @@ func (d *DvrClipExtraction) Convert(name string, startTime *time.Time, endTime *
 		}
 		query += "dvrConverterOutputFilename=" + outputFileName
 	}
+	if len(query) > 0 {
+		query = "?" + query
+	}
+
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
+
+	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
+}
+
+// ConvertSeb converts
+func (d *DvrClipExtraction) ConvertSeb(name string, startTime int64, endTime int64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
+	d.setNoParams()
+	query := ""
+
+	if startTime != 0 {
+		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime, 10)
+	}
+
+	if endTime != 0 {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime, 10)
+	}
+
+	if outputFileName != "" {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterOutputFilename=" + outputFileName
+	}
+
+	if query != "" {
+		query += "&"
+	}
+	query += "dvrConverterDebugConversions=" + strconv.FormatBool(debugEnabled)
+
 	if len(query) > 0 {
 		query = "?" + query
 	}
@@ -187,6 +218,43 @@ func (d *DvrClipExtraction) ConvertByDurationWithStartTime(name string, startTim
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
 
+// ConvertByDurationWithStartTimeSeb converts by duration with start time
+func (d *DvrClipExtraction) ConvertByDurationWithStartTimeSeb(name string, startTime int64, duration int64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
+	d.setNoParams()
+	query := ""
+
+	if startTime != 0 {
+		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime, 10)
+	}
+
+	if duration != 0 {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterDuration=" + strconv.FormatInt(duration, 10)
+	}
+
+	if outputFileName != "" {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterOutputFilename=" + outputFileName
+	}
+
+	if query != "" {
+		query += "&"
+	}
+	query += "dvrConverterDebugConversions=" + strconv.FormatBool(debugEnabled)
+
+	if len(query) > 0 {
+		query = "?" + query
+	}
+
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
+
+	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
+}
+
 // ConvertByDurationWithEndTime convert by duration with end time
 func (d *DvrClipExtraction) ConvertByDurationWithEndTime(name string, endTime *time.Time, duration *time.Duration, outputFileName string) (map[string]interface{}, error) {
 	d.setNoParams()
@@ -206,6 +274,43 @@ func (d *DvrClipExtraction) ConvertByDurationWithEndTime(name string, endTime *t
 		}
 		query += "dvrConverterOutputFilename=" + outputFileName
 	}
+	if len(query) > 0 {
+		query = "?" + query
+	}
+
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
+
+	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
+}
+
+// ConvertByDurationWithEndTimeSeb convert by duration with end time
+func (d *DvrClipExtraction) ConvertByDurationWithEndTimeSeb(name string, endTime int64, duration int64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
+	d.setNoParams()
+	query := ""
+
+	if endTime != 0 {
+		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime, 10)
+	}
+
+	if duration != 0 {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterDuration=" + strconv.FormatInt(duration, 10)
+	}
+
+	if outputFileName != "" {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterOutputFilename=" + outputFileName
+	}
+
+	if query != "" {
+		query += "&"
+	}
+	query += "dvrConverterDebugConversions=" + strconv.FormatBool(debugEnabled)
+
 	if len(query) > 0 {
 		query = "?" + query
 	}
