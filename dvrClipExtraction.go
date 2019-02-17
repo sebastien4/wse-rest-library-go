@@ -140,19 +140,19 @@ func (d *DvrClipExtraction) Convert(name string, startTime *time.Time, endTime *
 }
 
 // ConvertSeb converts
-func (d *DvrClipExtraction) ConvertSeb(name string, startTime int64, endTime int64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
+func (d *DvrClipExtraction) ConvertSeb(name string, startTime uint64, endTime uint64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
 	d.setNoParams()
 	query := ""
 
 	if startTime != 0 {
-		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime, 10)
+		query += "dvrConverterStartTime=" + strconv.FormatUint(startTime, 10)
 	}
 
 	if endTime != 0 {
 		if query != "" {
 			query += "&"
 		}
-		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime, 10)
+		query += "dvrConverterEndTime=" + strconv.FormatUint(endTime, 10)
 	}
 
 	if outputFileName != "" {
