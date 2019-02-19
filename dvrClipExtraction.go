@@ -87,15 +87,15 @@ func (d *DvrClipExtraction) Create() (map[string]interface{}, error) {
 	return response, err
 }
 
-// GetItem retrieves the information about a store/converter
-func (d *DvrClipExtraction) GetItem(name string) (map[string]interface{}, error) {
+// GetItemOld retrieves the information about a store/converter
+func (d *DvrClipExtraction) GetItemOld(name string) (map[string]interface{}, error) {
 	d.setRestURI(d.baseURI + "/" + name)
 
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 }
 
-// GetItemSeb retrieves the information about a store/converter
-func (d *DvrClipExtraction) GetItemSeb(name string) (WSEDVRConverter, error) {
+// GetItem retrieves the information about a store/converter
+func (d *DvrClipExtraction) GetItem(name string) (WSEDVRConverter, error) {
 	d.setRestURI(d.baseURI + "/" + name)
 
 	var r WSEDVRConverter
@@ -112,47 +112,26 @@ func (d *DvrClipExtraction) ConvertGroup(nameArr []string) (map[string]interface
 }
 
 // Convert converts
-func (d *DvrClipExtraction) Convert(name string, startTime *time.Time, endTime *time.Time, outputFileName string) (map[string]interface{}, error) {
-	d.setNoParams()
-	query := ""
-	if startTime != nil {
-		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime.Unix(), 10)
-	}
-	if endTime != nil {
-		if query != "" {
-			query += "&"
-		}
-		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime.Unix(), 10)
-	}
-	if outputFileName != "" {
-		if query != "" {
-			query += "&"
-		}
-		query += "dvrConverterOutputFilename=" + outputFileName
-	}
-	if len(query) > 0 {
-		query = "?" + query
-	}
-
-	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
-
-	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
-}
-
-// ConvertSeb converts
-func (d *DvrClipExtraction) ConvertSeb(name string, startTime uint64, endTime uint64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
+func (d *DvrClipExtraction) Convert(name string, startTime int64, endTime int64, outputFolder, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
 	d.setNoParams()
 	query := ""
 
 	if startTime != 0 {
-		query += "dvrConverterStartTime=" + strconv.FormatUint(startTime, 10)
+		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime, 10)
 	}
 
 	if endTime != 0 {
 		if query != "" {
 			query += "&"
 		}
-		query += "dvrConverterEndTime=" + strconv.FormatUint(endTime, 10)
+		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime, 10)
+	}
+
+	if outputFolder != "" {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterDefaultFileDestination=" + outputFolder
 	}
 
 	if outputFileName != "" {
@@ -283,6 +262,34 @@ func (d *DvrClipExtraction) ConvertByDurationWithEndTime(name string, endTime *t
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
 
+// ConvertOld converts
+func (d *DvrClipExtraction) ConvertOld(name string, startTime *time.Time, endTime *time.Time, outputFileName string) (map[string]interface{}, error) {
+	d.setNoParams()
+	query := ""
+	if startTime != nil {
+		query += "dvrConverterStartTime=" + strconv.FormatInt(startTime.Unix(), 10)
+	}
+	if endTime != nil {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterEndTime=" + strconv.FormatInt(endTime.Unix(), 10)
+	}
+	if outputFileName != "" {
+		if query != "" {
+			query += "&"
+		}
+		query += "dvrConverterOutputFilename=" + outputFileName
+	}
+	if len(query) > 0 {
+		query = "?" + query
+	}
+
+	d.setRestURI(d.baseURI + "/" + name + "/actions/convert" + query)
+
+	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
+}
+
 // ConvertByDurationWithEndTimeSeb convert by duration with end time
 func (d *DvrClipExtraction) ConvertByDurationWithEndTimeSeb(name string, endTime int64, duration int64, outputFileName string, debugEnabled bool) (map[string]interface{}, error) {
 	d.setNoParams()
@@ -320,8 +327,8 @@ func (d *DvrClipExtraction) ConvertByDurationWithEndTimeSeb(name string, endTime
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, PUT, "")
 }
 
-// GetAll retrieves the list of DVR stores associated with this application instance
-func (d *DvrClipExtraction) GetAll() (map[string]interface{}, error) {
+// GetAllOld retrieves the list of DVR stores associated with this application instance
+func (d *DvrClipExtraction) GetAllOld() (map[string]interface{}, error) {
 	d.setNoParams()
 
 	d.setRestURI(d.baseURI)
@@ -329,8 +336,8 @@ func (d *DvrClipExtraction) GetAll() (map[string]interface{}, error) {
 	return d.sendRequest(d.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 }
 
-// GetAllSeb retrieves the list of Applications
-func (d *DvrClipExtraction) GetAllSeb() (WSEDVRStores, error) {
+// GetAll retrieves the list of Applications
+func (d *DvrClipExtraction) GetAll() (WSEDVRStores, error) {
 	d.setNoParams()
 
 	d.setRestURI(d.baseURI)

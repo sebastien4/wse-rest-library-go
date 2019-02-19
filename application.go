@@ -89,8 +89,8 @@ func (a *Application) GetAdvanced() (map[string]interface{}, error) {
 	return a.sendRequest(a.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 }
 
-// GetAll retrieves the list of Applications
-func (a *Application) GetAll() (map[string]interface{}, error) {
+// GetAllOld retrieves the list of Applications
+func (a *Application) GetAllOld() (map[string]interface{}, error) {
 	a.setParameters()
 
 	a.setRestURI(a.host() + "/servers/" + a.serverInstance() + "/vhosts/" + a.vHostInstance() + "/applications")
@@ -98,8 +98,8 @@ func (a *Application) GetAll() (map[string]interface{}, error) {
 	return a.sendRequest(a.preparePropertiesForRequest(), []base.Entity{}, GET, "")
 }
 
-// GetAllSeb retrieves the list of Applications
-func (a *Application) GetAllSeb() (WSEApps, error) {
+// GetAll retrieves the list of Applications
+func (a *Application) GetAll() (WSEApps, error) {
 	a.setParameters()
 
 	a.setRestURI(a.host() + "/servers/" + a.serverInstance() + "/vhosts/" + a.vHostInstance() + "/applications")
